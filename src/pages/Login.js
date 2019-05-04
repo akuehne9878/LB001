@@ -13,6 +13,8 @@ import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import withStyles from "@material-ui/core/styles/withStyles";
 
+import SimpleSnackbar from "../components/SimpleSnackbar";
+
 import UserModel from "../model/UserModel";
 
 const styles = theme => ({
@@ -54,10 +56,11 @@ class Login extends React.Component {
     this.state = {
       user: "",
       password: "",
-      rememberMe: false
+      rememberMe: false,
+      error: false
     };
 
-    let user = localStorage.getItem("user");
+    let user = localStorage.getItem("remember");
     if (user) {
       var obj = JSON.parse(atob(user));
       this.login(obj.user, obj.password);
@@ -78,24 +81,28 @@ class Login extends React.Component {
 
   handleClick() {
     if (this.state.rememberMe) {
-      localStorage.setItem("user", btoa(JSON.stringify(this.state)));
+      localStorage.setItem("remember", btoa(JSON.stringify({ user: this.state.user, password: this.state.password })));
     }
 
     this.login(this.state.user, this.state.password);
   }
 
   login(user, password) {
-    this.getHash(password).then(function(hash) {
-      var obj = { user: user, password: hash };
+    var that = this;
 
-      var userModel = new UserModel();
-      userModel.login(obj).then(function(result) {
+    this.getHash(password)
+      .then(function(hash) {
+        let obj = { user: user, password: hash };
+        return new UserModel().login(obj);
+      })
+      .then(function(result) {
         if (result.length > 0) {
-          sessionStorage.setItem("userContext", result[0]);
-          window.location.reload();
+          sessionStorage.setItem("userID", result[0].userID);
+          that.props.history.push("/main");
+        } else {
+          that.setState({ error: true });
         }
       });
-    });
   }
 
   getHash(str, algo = "SHA-256") {
@@ -112,6 +119,14 @@ class Login extends React.Component {
       return result;
     });
   }
+
+  handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    this.setState({ error: false });
+  };
 
   render() {
     const { classes } = this.props;
@@ -141,6 +156,9 @@ class Login extends React.Component {
             </Button>
           </form>
         </Paper>
+        <SimpleSnackbar open={this.state.error} handleClose={this.handleCloseSnackbar}>
+          {" "}
+        </SimpleSnackbar>
       </main>
     );
   }

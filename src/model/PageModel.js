@@ -6,7 +6,7 @@ class PageModel extends Model {
   }
 
   hierarchy() {
-    return fetch(this.getBaseUrl() + this.getEntityName() + "/hierarchy", {
+    return fetch(this.getBaseUrl() + "hierarchy/" + sessionStorage.getItem("userID"), {
       method: "POST",
       headers: {
         Accept: "application/json",

@@ -21,6 +21,7 @@ export default class NewPageDialog extends React.Component {
     var that = this;
     model.createObject(obj).then(function() {
       that.props.onClose();
+      that.props.afterClose();
     });
   };
 
